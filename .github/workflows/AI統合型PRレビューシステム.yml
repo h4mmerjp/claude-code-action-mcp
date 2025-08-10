@@ -12,33 +12,33 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      
+
     steps:
       # 1. リポジトリのチェックアウト
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 全履歴を取得
-      
+          fetch-depth: 0 # 全履歴を取得
+
       # 2. UV（Pythonツール）のセットアップ
       - name: 🔧 Setup UV
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      
+
       # 3. Node.jsのセットアップ（Claude-Flow用）
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      
+          node-version: "20"
+
       # 4. 統合Claude Action実行
       - name: 🤖 Execute AI-Powered Review
         uses: anthropics/claude-code-action@beta
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # MCPサーバー設定
           mcp_config: |
             {
@@ -61,7 +61,7 @@ jobs:
                 }
               }
             }
-          
+
           # 利用可能なツール
           allowed_tools: |
             # Serenaツール（精密なコード分析）
@@ -70,23 +70,23 @@ jobs:
             mcp__serena__get_symbols_overview
             mcp__serena__replace_symbol_body
             mcp__serena__execute_shell_command
-            
+
             # Claude-Flowツール（高度な調整）
             mcp__claude-flow__swarm
             mcp__claude-flow__memory_store
             mcp__claude-flow__memory_query
             mcp__claude-flow__neural_train
-            
+
             # 基本ツール
             Edit
             Replace
             Bash(npm test)
             Bash(npm run lint)
-          
+
           # カスタム指示
           custom_instructions: |
             ## 🎯 レビュープロセス
-            
+
             1. **Serenaで精密分析**
                - get_symbols_overviewで変更ファイルの構造把握
                - find_referencing_symbolsで影響範囲を特定

@@ -17,7 +17,7 @@ jobs:
       - name: 🎯 Quality Analysis & Improvement
         uses: anthropics/claude-code-action@beta
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           max_turns: "10"
           timeout_minutes: "60"
           branch_prefix: "quality/"
