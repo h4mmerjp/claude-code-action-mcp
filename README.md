@@ -12,3 +12,4 @@ commit 後
 bookmark 後
 bookmark 後 commit test10 後
 bookmark 後 commit test11 後
+test 12
