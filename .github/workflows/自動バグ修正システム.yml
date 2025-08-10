@@ -1,0 +1,62 @@
+name: 🐛 AI自動バグ修正システム
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  auto-fix-bug:
+    if: contains(github.event.issue.labels.*.name, 'bug')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🤖 AI Bug Fixer
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude-fix"
+          branch_prefix: "fix/"
+
+          mcp_config: |
+            {
+              "mcpServers": {
+                "serena": {
+                  "command": "uvx",
+                  "args": [
+                    "--from", "git+https://github.com/oraios/serena",
+                    "serena-mcp-server"
+                  ]
+                },
+                "claude-flow": {
+                  "command": "npx",
+                  "args": ["claude-flow@alpha", "mcp-server"]
+                }
+              }
+            }
+
+          direct_prompt: |
+            ## 🐛 自動バグ修正タスク
+
+            ### ステップ1: 問題の特定
+            1. Issueの内容を分析
+            2. Serenaのfind_symbolで関連コードを特定
+            3. エラーログがあれば解析
+
+            ### ステップ2: 根本原因分析
+            1. Claude-Flowのneural_analyzeで問題パターンを認識
+            2. find_referencing_symbolsで影響範囲を確認
+            3. 類似の過去の修正をmemory_queryで検索
+
+            ### ステップ3: 修正実装
+            1. replace_symbol_bodyで問題箇所を修正
+            2. テストケースを追加/更新
+            3. execute_shell_commandでテスト実行
+
+            ### ステップ4: 検証
+            1. すべてのテストが通ることを確認
+            2. 影響範囲の再テスト
+            3. 修正内容の要約をコメント

@@ -1,0 +1,77 @@
+name: 📚 AIドキュメント自動管理
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**/*.ts"
+      - "src/**/*.js"
+      - "src/**/*.py"
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Documentation scope"
+        required: false
+        default: "all"
+
+jobs:
+  auto-documentation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📝 Generate/Update Documentation
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          base_branch: "main"
+          branch_prefix: "docs/"
+
+          mcp_config: |
+            {
+              "mcpServers": {
+                "serena": {
+                  "command": "uvx",
+                  "args": [
+                    "--from", "git+https://github.com/oraios/serena",
+                    "serena-mcp-server",
+                    "--mode", "one-shot",
+                    "--mode", "planning"
+                  ]
+                },
+                "claude-flow": {
+                  "command": "npx",
+                  "args": [
+                    "claude-flow@alpha", "mcp-server",
+                    "--strategy", "documentation"
+                  ]
+                }
+              }
+            }
+
+          direct_prompt: |
+            ## 📚 ドキュメント自動生成タスク
+
+            ### 1. コード分析
+            - Serenaのget_symbols_overviewで全体構造を把握
+            - 新規/変更されたAPIを特定
+            - 公開インターフェースを抽出
+
+            ### 2. ドキュメント生成
+            - API仕様書の作成/更新
+            - 使用例の生成
+            - 型定義の文書化
+            - エラーハンドリングの説明
+
+            ### 3. 既存ドキュメントとの統合
+            - README.mdの更新
+            - CHANGELOG.mdへの追記
+            - API.mdの更新
+
+            ### 4. 品質チェック
+            - リンクの有効性確認
+            - コード例の動作確認
+            - マークダウンの構文チェック
+
+            すべてのドキュメントを最新の状態に保ってください。

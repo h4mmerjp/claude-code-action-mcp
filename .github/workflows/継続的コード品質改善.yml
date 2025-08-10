@@ -1,0 +1,79 @@
+name: 📊 継続的コード品質改善
+on:
+  schedule:
+    - cron: "0 2 * * 1" # 毎週月曜日の深夜2時
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  code-quality-improvement:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Full Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🎯 Quality Analysis & Improvement
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          max_turns: "10"
+          timeout_minutes: "60"
+          branch_prefix: "quality/"
+
+          mcp_config: |
+            {
+              "mcpServers": {
+                "serena": {
+                  "command": "uvx",
+                  "args": [
+                    "--from", "git+https://github.com/oraios/serena",
+                    "serena-mcp-server",
+                    "--mode", "planning",
+                    "--mode", "editing"
+                  ]
+                },
+                "claude-flow": {
+                  "command": "npx",
+                  "args": [
+                    "claude-flow@alpha", "mcp-server",
+                    "--neural-enhanced"
+                  ]
+                }
+              }
+            }
+
+          direct_prompt: |
+            ## 📊 週次コード品質改善タスク
+
+            ### Phase 1: 分析（Claude-Flow主導）
+            1. hive-mind spawnで全体分析を開始
+            2. 以下の観点で問題を検出：
+               - 重複コード
+               - 複雑度の高い関数
+               - 未使用のコード
+               - 型の不整合
+               - セキュリティリスク
+
+            ### Phase 2: 優先順位付け（Serena支援）
+            1. find_referencing_symbolsで重要度を評価
+            2. 改善による影響度を算出
+            3. リスクと効果のバランスを考慮
+
+            ### Phase 3: 改善実装
+            1. 優先度の高い問題から順に修正
+            2. 各修正後にテストを実行
+            3. パフォーマンスへの影響を測定
+
+            ### Phase 4: レポート生成
+            1. 改善内容のサマリー作成
+            2. メトリクスの変化を記録
+            3. 次回への推奨事項をmemory_storeに保存
+
+            最大5つの改善を実施し、PRを作成してください。
+
+          claude_env: |
+            NODE_ENV: test
+            CI: true
+            QUALITY_CHECK: true
