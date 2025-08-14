@@ -1,0 +1,48 @@
+name: Claude AI Code Review with MCP
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  claude_code_review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Serena MCP and Claude Flow MCP integration is typically handled internally by the Claude Code Action
+          # via the Model Context Protocol (MCP). No explicit configuration is usually needed here,
+          # assuming the Claude Action is built to leverage these tools when available.
+          # If specific endpoints or configurations are required for Serena/Claude Flow, they would be added here
+          # as additional inputs, or configured within the Claude Action's environment.
+          # For example, if Serena MCP was a separate service, you might pass its URL:
+          # serena-mcp-url: ${{ secrets.SERENA_MCP_URL }}
+          # claude-flow-mcp-url: ${{ secrets.CLAUDE_FLOW_MCP_URL }}
+          # The action will automatically detect and use the MCP tools if they are configured and accessible.
+          # The prompt for Claude can be customized based on the event type.
+          # For pull requests, you might ask for a code review.
+          # For issue comments, you might respond to a specific query if the comment contains '@claude'.
+          prompt: |
+            ${{ github.event_name == 'pull_request' && format('Please review this pull request for potential bugs, code style issues, and suggest improvements. Leverage Serena MCP for semantic code understanding and Claude Flow MCP for orchestrating complex code changes.') || '' }}
+            ${{ github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && format('The user has mentioned @claude in a comment. Please respond to the comment: {0}. Leverage Serena MCP for semantic code understanding and Claude Flow MCP for orchestrating complex code changes.', github.event.comment.body) || '' }}
+          # Additional options for Claude Action can be added here, e.g., for specific review types or output formats.
+          # review-type: 'full'
+          # output-format: 'markdown'
