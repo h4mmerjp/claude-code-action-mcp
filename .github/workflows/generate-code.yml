@@ -54,7 +54,7 @@ jobs:
       - name: Generate Code with Claude AI
         if: steps.extract_issue_content.outputs.trigger_generate == 'true'
         id: claude_generate
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@beta
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
